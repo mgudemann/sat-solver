@@ -1,0 +1,36 @@
+	Tue May 25 19:37 2021 Time and Allocation Profiling Report  (Final)
+
+	   CDCL-exe +RTS -N -p -RTS
+
+	total time  =        0.00 secs   (0 ticks @ 1000 us, 8 processors)
+	total alloc =     197,608 bytes  (excludes profiling overheads)
+
+COST CENTRE  MODULE              SRC                                       %time %alloc
+
+MAIN         MAIN                <built-in>                                  0.0   65.6
+CAF          GHC.IO.Handle.FD    <entire-module>                             0.0   17.9
+CAF          GHC.IO.Exception    <entire-module>                             0.0    1.5
+CAF          GHC.IO.Encoding     <entire-module>                             0.0    1.9
+readCdclFile CDCL.CDCLFilereader src/CDCL/CDCLFilereader.hs:(9,1)-(17,17)    0.0   11.3
+
+
+                                                                                                  individual      inherited
+COST CENTRE     MODULE                SRC                                      no.     entries  %time %alloc   %time %alloc
+
+MAIN            MAIN                  <built-in>                               214          0    0.0   65.6     0.0  100.0
+ CAF            GHC.Conc.Signal       <entire-module>                          326          0    0.0    0.3     0.0    0.3
+ CAF            GHC.Conc.Sync         <entire-module>                          325          0    0.0    0.4     0.0    0.4
+ CAF            GHC.IO.Encoding       <entire-module>                          310          0    0.0    1.9     0.0    1.9
+ CAF            GHC.IO.Encoding.Iconv <entire-module>                          308          0    0.0    0.1     0.0    0.1
+ CAF            GHC.IO.Exception      <entire-module>                          302          0    0.0    1.5     0.0    1.5
+ CAF            GHC.IO.Handle.FD      <entire-module>                          300          0    0.0   17.9     0.0   17.9
+ CAF            GHC.IO.Handle.Text    <entire-module>                          298          0    0.0    0.0     0.0    0.0
+ CAF            GHC.Event.Thread      <entire-module>                          260          0    0.0    0.6     0.0    0.6
+ CAF            GHC.IO.FD             <entire-module>                          241          0    0.0    0.0     0.0    0.0
+ CAF            GHC.Event.Poll        <entire-module>                          232          0    0.0    0.0     0.0    0.0
+ CAF:main1      Main                  <no location info>                       426          0    0.0    0.0     0.0    0.0
+  main          Main                  app/Main.hs:(9,1)-(12,31)                428          1    0.0    0.0     0.0    0.0
+   readCdclFile CDCL.CDCLFilereader   src/CDCL/CDCLFilereader.hs:(9,1)-(17,17) 429          1    0.0    0.0     0.0    0.0
+ CAF:main2      Main                  <no location info>                       425          0    0.0    0.3     0.0    0.3
+ main           Main                  app/Main.hs:(9,1)-(12,31)                430          0    0.0    0.0     0.0   11.3
+  readCdclFile  CDCL.CDCLFilereader   src/CDCL/CDCLFilereader.hs:(9,1)-(17,17) 431          0    0.0   11.3     0.0   11.3
