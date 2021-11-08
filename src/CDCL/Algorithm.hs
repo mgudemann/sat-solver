@@ -22,9 +22,10 @@ import           CDCL.Decisionalalgorithm (getHighestActivity,
 import           CDCL.Types (Activity (..), ActivityMap, BoolVal (..),
                      CDCLResult (..), Clause, ClauseList, InterpretResult (..),
                      Level (..), Literal (..), MappedTupleList, Period (..),
-                     Reason (..), TriTuple, TupleClauseList,
-                     decreasePeriod, getClauseFromReducedClauseAndOGClause,
-                     getEmptyClause, getLiteralValue, getNOK,
+                     Reason (..), SATResult (..), TriTuple, Tuple,
+                     TupleClauseList, decreasePeriod,
+                     getClauseFromReducedClauseAndOGClause, getEmptyClause,
+                     getLiteralValue, getNOK,
                      getOGFromReducedClauseAndOGClause, increaseLvl,
                      negateLiteralValue, transformClauseList)
 
@@ -42,9 +43,20 @@ hardCoded = Period 30
 startBoundary = 20
 
 
--- | This function calls the solver without reporting any statistics.
-solve :: [[Integer]] -> CDCLResult
-solve l = cdcl l False False
+encodeTuple :: Tuple -> Int
+encodeTuple (Lit l, BTrue) = fromInteger l
+encodeTuple (Lit l, BFalse) = fromInteger (-l)
+
+-- | This function calls the solver without reporting any statistics. Returns
+-- list of literanls encoded as Integer.
+solve :: [[Integer]] -> SATResult
+solve t = case result of
+            SAT l                             -> Satisfiable (map encodeTuple l)
+            SAT_WITH_STATS l _ _ _ _          -> Satisfiable (map encodeTuple l)
+            SAT_WITH_FULL_STATS l _ _ _ _ _ _ -> Satisfiable (map encodeTuple l)
+            UNSAT                             -> Unsatisfiable
+            UNSAT_WITH_STATS _ _              -> Unsatisfiable
+            where result = cdcl t False False
 
 -- | This function will start the CDCL Procedure.
 --   To call this function do for example:

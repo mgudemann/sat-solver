@@ -15,6 +15,10 @@ module CDCL.Types where
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
+-- | SATResult
+data SATResult = Satisfiable [Int]
+               | Unsatisfiable
+
 -- | Datatype for CDCL
 data CDCLResult
     =
@@ -37,11 +41,11 @@ instance Show CDCLResult where
     show (SAT tl) = "Result:\nSAT " ++ show tl
 
     show (SAT_WITH_STATS tl decisions decisionLvl learned restarts) = "Result:\nSAT " ++ show tl ++ "\nStatistics:" ++ "\nDecisions:"
-     ++ show decisions ++ "\nAmount of learned Clauses: " ++ show learned ++ "\nHighest Decisionlevel: " ++ show decisionLvl 
+     ++ show decisions ++ "\nAmount of learned Clauses: " ++ show learned ++ "\nHighest Decisionlevel: " ++ show decisionLvl
      ++ "\nAmount of Restarts: " ++ show restarts
 
     show (SAT_WITH_FULL_STATS tl mtl learned decisions decisionLvl int1 restarts) = "Result:\nSAT " ++ show tl ++ "\n\nStatistics:" ++
-     "\n\nDecisions:\n" ++ show mtl ++ "\nLearned Clauses: " ++ show learned ++ "\n\nAmount of Decisions: " ++ show decisions ++ 
+     "\n\nDecisions:\n" ++ show mtl ++ "\nLearned Clauses: " ++ show learned ++ "\n\nAmount of Decisions: " ++ show decisions ++
      "\nHighest Decisionlevel: " ++ show decisionLvl ++ "\nAmount of learned Clauses: "  ++ show int1 ++ "\nAmount of Restarts: " ++ show restarts
 
     show UNSAT = "UNSAT"
