@@ -13,21 +13,20 @@
 ---------------------------------------------------------------------
 
 
-module CDCL.Algorithm (cdcl, interpret, searchTuple) where
+module CDCL.Algorithm (cdcl, solve, interpret, searchTuple) where
 
 import           CDCL.Decisionalalgorithm (getHighestActivity,
                      getShortestClauseViaActivity, halveActivityMap,
-                     initialActivity, setLiteralViaActivity, updateActivity)
+                     initialActivity, setLiteralViaActivity)
 
 import           CDCL.Types (Activity (..), ActivityMap, BoolVal (..),
                      CDCLResult (..), Clause, ClauseList, InterpretResult (..),
                      Level (..), Literal (..), MappedTupleList, Period (..),
-                     Reason (..), TriTuple, Tuple, TupleClauseList,
+                     Reason (..), TriTuple, TupleClauseList,
                      decreasePeriod, getClauseFromReducedClauseAndOGClause,
                      getEmptyClause, getLiteralValue, getNOK,
                      getOGFromReducedClauseAndOGClause, increaseLvl,
                      negateLiteralValue, transformClauseList)
-import qualified CDCL.Types as TypeC
 
 import           CDCL.Unitpropagation (unitPropagation, unitResolution,
                      unitSubsumption)
@@ -36,13 +35,16 @@ import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           CDCL.Conflict (analyzeConflict)
 
-import           Data.List
-import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 
 hardCoded = Period 30
 startBoundary = 20
+
+
+-- | This function calls the solver without reporting any statistics.
+solve :: [[Integer]] -> CDCLResult
+solve l = cdcl l False False
 
 -- | This function will start the CDCL Procedure.
 --   To call this function do for example:
@@ -175,7 +177,7 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
     -- Returns some statistics
     | interpreted == OK && stats = SAT_WITH_STATS (map fst tupleRes) (getDecisions updatedMap 0 0) (toInteger(length (Map.keys updatedMap))) (toInteger (length learnedClauses)) restarts
     -- Returns no statistics
-    | interpreted == OK = SAT (map fst tupleRes) 
+    | interpreted == OK = SAT (map fst tupleRes)
     | otherwise = cdcl' halvedActivity
                         newLvl
                         list
@@ -318,5 +320,3 @@ getDecisions mtl int found
     | snd (head arr) == Decision = getDecisions mtl (int + 1) (found + 1)
     | snd (head arr) /= Decision && int == 0 = getDecisions mtl (int + 1) 0
     where arr = fromMaybe [] (Map.lookup (Level int) mtl)
-
-
