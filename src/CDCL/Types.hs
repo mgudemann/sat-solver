@@ -74,7 +74,11 @@ data BoolVal =
     |
         -- | Valuewise -1
         BNothing
-    deriving (Show, Eq, Ord)
+    deriving (Eq, Ord)
+instance Show BoolVal where
+    show BFalse = "False"
+    show BTrue = "True"
+    show BNothing = "Noting"
 
 -- | Datatype for InterpResult
 data InterpretResult =
@@ -90,7 +94,10 @@ data InterpretResult =
 
 -- | Literal defined as Integer
 newtype Literal = Lit Integer
-    deriving (Show, Eq, Ord)
+    deriving (Eq, Ord)
+instance Show Literal where
+    show (Lit i) = "'" ++ show i ++ "'"
+
 
 -- | Level is associated with the decision level.
 --   Defined as an Integer

@@ -35,17 +35,21 @@ import           CDCL.Unitpropagation (unitPropagation, unitResolution,
 import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           CDCL.Conflict (analyzeConflict)
-
+import           CDCL.DPLL (rmPureVars)
+ 
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 
 hardCoded = Period 30
 startBoundary = 20
 
-
 encodeTuple :: Tuple -> Int
 encodeTuple (Lit l, BTrue) = fromInteger l
 encodeTuple (Lit l, BFalse) = fromInteger (-l)
+
+decodeTuple :: Int -> Tuple
+decodeTuple i = if i < 0 then (Lit l, BFalse) else (Lit l, BTrue) 
+    where l = toInteger i
 
 -- | This function calls the solver without reporting any statistics. Returns
 -- list of literanls encoded as Integer.
@@ -58,14 +62,26 @@ solve t = case result of
             UNSAT_WITH_STATS _ _              -> Unsatisfiable
             where result = cdcl t False False
 
--- | This function will start the CDCL Procedure.
+-- | This function will start the Conflict-Driven Clause Learning (CDCL) Procedure.
 --   To call this function do for example:
---   cdcl [[1,2,3],[2,5]]
---   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]]
+--   cdcl [[1,2,3],[2,5]] False False
+--   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]] False False
 --   The function will return the result of the cdcl' function.
 --   Function will immediately return SAT if ClauseList is null or UNSAT if an empty List is found within clist
 cdcl :: [[Integer]] -> Bool -> Bool -> CDCLResult
-cdcl clist stats fullStats
+cdcl clist stats fullStats = case result of 
+            SAT l                             -> SAT (l ++ decodedPureVals)
+            SAT_WITH_STATS l a0 a1 a2 a3         -> SAT_WITH_STATS (l ++ decodedPureVals) a0 a1 a2 a3
+            SAT_WITH_FULL_STATS l a0 a1 a2 a3 a4 a5 -> SAT_WITH_FULL_STATS (l ++ decodedPureVals) a0 a1 a2 a3 a4 a5
+            UNSAT                             -> UNSAT
+            UNSAT_WITH_STATS a0 a1            -> UNSAT_WITH_STATS a0 a1
+            where (reducedTerm, pureVars) = rmPureVars clist
+                  decodedPureVals = map decodeTuple pureVars
+                  result = _cdcl reducedTerm False False
+
+
+_cdcl :: [[Integer]] -> Bool -> Bool -> CDCLResult
+_cdcl clist stats fullStats
     | checked = UNSAT
     | null clist && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0
     | null clist && stats = SAT_WITH_STATS [] 0 0 0 0
@@ -101,28 +117,38 @@ cdcl clist stats fullStats
 --   After that the recursion starts again with Unitpropagation.
 --   This happens until either SAT or UNSAT is returned as result.
 cdcl'
-  :: ActivityMap
-  -> Level
-  -> TupleClauseList
-  -> MappedTupleList
-  -> ClauseList
-  -> ClauseList
-  -> [Clause]
-  -> [Clause]
-  -> ClauseList
-  -> Period
-  -> Integer
-  -> Integer
-  -> Integer
-  -> Bool
-  -> Bool
-  -> Integer
-  -> CDCLResult
-cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confClauses clist period conflictIteration upperBound currentBoundary stats fullStats restarts
+  :: ActivityMap -- aMap : ActivityMap :: Literal -> Activity 
+  -> Level -- (Level lvl)
+  -> TupleClauseList -- tlist : Tuple Clause List
+  -> MappedTupleList -- mappedTL : Mapped Tuple Clause List
+  -> ClauseList -- clistOG : Clause List in Original Form
+  -> ClauseList -- learnedClist
+  -> [Clause] -- learnedClauses
+  -> [Clause] -- confClauses
+  -> ClauseList -- clist : ClauseList :: [
+                --                          ReducedClauseAndOGClause :: (
+                --                              Clause :: [Literal :: Lit Integer]    -- Clause reduced with Unitresolution
+                --                              , Clause :: [Literal :: Lit Integer]  -- Clause in its original form
+                --                          )
+                --                       ]
+  -> Period -- period
+  -> Integer -- conflictIteration : Counts the conficts. 
+             --                         if conflictIteration == upperBoundary
+             --                             or conflictIteration == currentBoundary
+             --                         then the algorithm will be restarted 
+             --                             with higher upperBoundary currentBoundary. 
+  -> Integer -- upperBoundary
+  -> Integer -- currentBoundary
+  -> Bool -- stats
+  -> Bool -- fullStats
+  -> Integer -- restarts
+  -> CDCLResult -- result
+cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confClauses clist period conflictIteration upperBoundary currentBoundary stats fullStats restarts
 
     -- First and Second Case are part of Restart Algorithm with Luby Sequence
-    -- current conflictiteration has same value like the current upper boundary. Restart the algorithm with higher upper boundary
-    | conflictIteration == upperBound = cdcl' (initialActivity clistOG Map.empty)
+    -- current conflictiteration has same value like the current upper boundary. 
+    -- Restart the algorithm with higher upper boundary !!
+    | conflictIteration == upperBoundary = cdcl' (initialActivity clistOG Map.empty)
                                               (Level 0)
                                               []
                                               Map.empty
@@ -133,13 +159,14 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
                                               learnedClist
                                               hardCoded
                                               0
-                                              (upperBound*2)
+                                              (upperBoundary * 2)
                                               startBoundary
                                               stats
                                               fullStats
                                               (restarts + 1)
 
-    -- current conflictiteration has same value like the current restart boundary. Restarts the algorithm with higher current boundary
+    -- current conflictiteration has same value like the current restart boundary. 
+    -- Restarts the algorithm with higher current boundary !!
     | conflictIteration == currentBoundary = cdcl' (initialActivity clistOG Map.empty)
                                                    (Level 0)
                                                    []
@@ -151,7 +178,7 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
                                                    learnedClist
                                                    hardCoded
                                                    0
-                                                   upperBound
+                                                   upperBoundary
                                                    (currentBoundary * 2)
                                                    stats
                                                    fullStats
@@ -176,7 +203,7 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
                            (makeTupleClauseListFromAnalyze analyzed))
                            periodUpdate2
                            (conflictIteration + 1)
-                           upperBound
+                           upperBoundary
                            currentBoundary
                            stats
                            fullStats
@@ -201,7 +228,7 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
                         (calculateClauseList (getClauseListFromTriTuple res) list)
                         periodUpdate2
                         conflictIteration
-                        upperBound
+                        upperBoundary
                         currentBoundary
                         stats
                         fullStats
