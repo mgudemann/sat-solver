@@ -21,9 +21,10 @@ data SATResult = Satisfiable [Int]
 
 -- | Datatype for CDCL
 data CDCLResult
-    =
+    =   SAT -- ^ Satisfiable, no information about solution or statistics
+    |
         -- | Formula resolved, with TupleList to show how it was solved
-        SAT TupleList
+        SAT_SOLUTION TupleList
     |
         -- | Formula resolved. Followed with TupleList, #Decisions, #LearnedClauses, #Restarts
         SAT_WITH_STATS TupleList Integer Integer Integer Integer
@@ -38,7 +39,9 @@ data CDCLResult
     deriving(Eq, Ord)
 
 instance Show CDCLResult where
-    show (SAT tl) = "Result:\nSAT " ++ show tl
+    show SAT = "Result:\nSAT"
+
+    show (SAT_SOLUTION tl) = "Result:\nSAT " ++ show tl
 
     show (SAT_WITH_STATS tl decisions decisionLvl learned restarts) = "Result:\nSAT " ++ show tl ++ "\nStatistics:" ++ "\nDecisions:"
      ++ show decisions ++ "\nAmount of learned Clauses: " ++ show learned ++ "\nHighest Decisionlevel: " ++ show decisionLvl

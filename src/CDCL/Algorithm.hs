@@ -51,12 +51,13 @@ encodeTuple (Lit l, BFalse) = fromInteger (-l)
 -- list of literanls encoded as Integer.
 solve :: [[Integer]] -> SATResult
 solve t = case result of
-            SAT l                             -> Satisfiable (map encodeTuple l)
+            SAT                               -> error "solution must be found for SAT"
+            SAT_SOLUTION      l               -> Satisfiable (map encodeTuple l)
             SAT_WITH_STATS l _ _ _ _          -> Satisfiable (map encodeTuple l)
             SAT_WITH_FULL_STATS l _ _ _ _ _ _ -> Satisfiable (map encodeTuple l)
             UNSAT                             -> Unsatisfiable
             UNSAT_WITH_STATS _ _              -> Unsatisfiable
-            where result = cdcl t False False
+            where result = cdcl t True False False
 
 -- | This function will start the CDCL Procedure.
 --   To call this function do for example:
@@ -64,13 +65,21 @@ solve t = case result of
 --   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]]
 --   The function will return the result of the cdcl' function.
 --   Function will immediately return SAT if ClauseList is null or UNSAT if an empty List is found within clist
-cdcl :: [[Integer]] -> Bool -> Bool -> CDCLResult
-cdcl clist stats fullStats
+cdcl :: [[Integer]] -> Bool -> Bool -> Bool -> CDCLResult
+cdcl clist valuation stats fullStats
     | checked = UNSAT
     | null clist && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0
     | null clist && stats = SAT_WITH_STATS [] 0 0 0 0
-    | null clist = SAT []--[] Map.empty 0
-    | otherwise = cdcl'
+    | null clist = SAT --[] Map.empty 0
+    | otherwise = case (valuation, result) of
+                    (False, SAT_SOLUTION _)                    -> SAT
+                    (False, SAT_WITH_STATS _ _ _ _ _)          -> SAT
+                    (False, SAT_WITH_FULL_STATS _ _ _ _ _ _ _) -> SAT
+                    _                                          -> result
+    where checked = any null clist
+          transformedList = transformClauseList clist
+          aMap = initialActivity transformedList Map.empty
+          result = cdcl'
                   aMap
                   (Level 0)
                   []
@@ -87,9 +96,6 @@ cdcl clist stats fullStats
                   stats
                   fullStats
                   0
-    where checked = any null clist
-          transformedList = transformClauseList clist
-          aMap = initialActivity transformedList Map.empty
 
 
 -- | Function will first call the Unitpropagation Function.
@@ -189,7 +195,7 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
     -- Returns some statistics
     | interpreted == OK && stats = SAT_WITH_STATS (map fst tupleRes) (getDecisions updatedMap 0 0) (toInteger(length (Map.keys updatedMap))) (toInteger (length learnedClauses)) restarts
     -- Returns no statistics
-    | interpreted == OK = SAT (map fst tupleRes)
+    | interpreted == OK = SAT_SOLUTION (map fst tupleRes)
     | otherwise = cdcl' halvedActivity
                         newLvl
                         list
