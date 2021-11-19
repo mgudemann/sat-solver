@@ -74,11 +74,7 @@ data BoolVal =
     |
         -- | Valuewise -1
         BNothing
-    deriving (Eq, Ord)
-instance Show BoolVal where
-    show BFalse = "False"
-    show BTrue = "True"
-    show BNothing = "Noting"
+    deriving (Show, Eq, Ord)
 
 -- | Datatype for InterpResult
 data InterpretResult =
