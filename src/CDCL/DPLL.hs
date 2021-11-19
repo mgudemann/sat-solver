@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
-module CDCL.DPLL (rmPureVars, getPureVars, isPureVar, rmVars) where
+module CDCL.DPLL (rmPureVars) where
 
 import Data.Set
 
