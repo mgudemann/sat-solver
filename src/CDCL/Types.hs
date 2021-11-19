@@ -90,10 +90,7 @@ data InterpretResult =
 
 -- | Literal defined as Integer
 newtype Literal = Lit Integer
-    deriving (Eq, Ord)
-instance Show Literal where
-    show (Lit i) = "'" ++ show i ++ "'"
-
+    deriving (Show, Eq, Ord)
 
 -- | Level is associated with the decision level.
 --   Defined as an Integer
