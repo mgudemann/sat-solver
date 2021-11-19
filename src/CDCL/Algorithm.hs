@@ -43,6 +43,7 @@ import           Data.Maybe
 hardCoded = Period 30
 startBoundary = 20
 
+
 encodeTuple :: Tuple -> Int
 encodeTuple (Lit l, BTrue) = fromInteger l
 encodeTuple (Lit l, BFalse) = fromInteger (-l)
@@ -70,11 +71,11 @@ solve t = case result of
 --   Function will immediately return SAT if ClauseList is null or UNSAT if an empty List is found within clist
 cdcl :: [[Integer]] -> Bool -> Bool -> CDCLResult
 cdcl clist stats fullStats = case result of 
-            SAT l                             -> SAT (l ++ decodedPureVals)
-            SAT_WITH_STATS l a0 a1 a2 a3         -> SAT_WITH_STATS (l ++ decodedPureVals) a0 a1 a2 a3
+            SAT l                                   -> SAT (l ++ decodedPureVals)
+            SAT_WITH_STATS l a0 a1 a2 a3            -> SAT_WITH_STATS (l ++ decodedPureVals) a0 a1 a2 a3
             SAT_WITH_FULL_STATS l a0 a1 a2 a3 a4 a5 -> SAT_WITH_FULL_STATS (l ++ decodedPureVals) a0 a1 a2 a3 a4 a5
-            UNSAT                             -> UNSAT
-            UNSAT_WITH_STATS a0 a1            -> UNSAT_WITH_STATS a0 a1
+            UNSAT                                   -> UNSAT
+            UNSAT_WITH_STATS a0 a1                  -> UNSAT_WITH_STATS a0 a1
             where (reducedTerm, pureVars) = rmPureVars clist
                   decodedPureVals = map decodeTuple pureVars
                   result = _cdcl reducedTerm False False
@@ -117,32 +118,23 @@ _cdcl clist stats fullStats
 --   After that the recursion starts again with Unitpropagation.
 --   This happens until either SAT or UNSAT is returned as result.
 cdcl'
-  :: ActivityMap -- aMap : ActivityMap :: Literal -> Activity 
-  -> Level -- (Level lvl)
-  -> TupleClauseList -- tlist : Tuple Clause List
-  -> MappedTupleList -- mappedTL : Mapped Tuple Clause List
-  -> ClauseList -- clistOG : Clause List in Original Form
-  -> ClauseList -- learnedClist
-  -> [Clause] -- learnedClauses
-  -> [Clause] -- confClauses
-  -> ClauseList -- clist : ClauseList :: [
-                --                          ReducedClauseAndOGClause :: (
-                --                              Clause :: [Literal :: Lit Integer]    -- Clause reduced with Unitresolution
-                --                              , Clause :: [Literal :: Lit Integer]  -- Clause in its original form
-                --                          )
-                --                       ]
-  -> Period -- period
-  -> Integer -- conflictIteration : Counts the conficts. 
-             --                         if conflictIteration == upperBoundary
-             --                             or conflictIteration == currentBoundary
-             --                         then the algorithm will be restarted 
-             --                             with higher upperBoundary currentBoundary. 
-  -> Integer -- upperBoundary
-  -> Integer -- currentBoundary
-  -> Bool -- stats
-  -> Bool -- fullStats
-  -> Integer -- restarts
-  -> CDCLResult -- result
+  :: ActivityMap
+  -> Level
+  -> TupleClauseList
+  -> MappedTupleList
+  -> ClauseList
+  -> ClauseList
+  -> [Clause]
+  -> [Clause]
+  -> ClauseList
+  -> Period
+  -> Integer
+  -> Integer
+  -> Integer
+  -> Bool
+  -> Bool
+  -> Integer
+  -> CDCLResult
 cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confClauses clist period conflictIteration upperBoundary currentBoundary stats fullStats restarts
 
     -- First and Second Case are part of Restart Algorithm with Luby Sequence
