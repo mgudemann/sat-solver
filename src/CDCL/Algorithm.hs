@@ -35,7 +35,8 @@ import           CDCL.Unitpropagation (unitPropagation, unitResolution,
 import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           CDCL.Conflict (analyzeConflict)
-
+import           CDCL.DPLL (rmPureVars)
+ 
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 
@@ -76,8 +77,9 @@ cdcl clist valuation stats fullStats
                     (False, SAT_WITH_STATS _ _ _ _ _)          -> SAT
                     (False, SAT_WITH_FULL_STATS _ _ _ _ _ _ _) -> SAT
                     _                                          -> result
-    where checked = any null clist
-          transformedList = transformClauseList clist
+    where (reducedTerm, _) = rmPureVars clist
+          checked = any null reducedTerm
+          transformedList = transformClauseList reducedTerm
           aMap = initialActivity transformedList Map.empty
           result = cdcl'
                   aMap
