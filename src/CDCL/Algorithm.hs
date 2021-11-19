@@ -126,12 +126,11 @@ cdcl'
   -> Bool
   -> Integer
   -> CDCLResult
-cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confClauses clist period conflictIteration upperBoundary currentBoundary stats fullStats restarts
+cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confClauses clist period conflictIteration upperBound currentBoundary stats fullStats restarts
 
     -- First and Second Case are part of Restart Algorithm with Luby Sequence
-    -- current conflictiteration has same value like the current upper boundary. 
-    -- Restart the algorithm with higher upper boundary !!
-    | conflictIteration == upperBoundary = cdcl' (initialActivity clistOG Map.empty)
+    -- current conflictiteration has same value like the current upper boundary. Restart the algorithm with higher upper boundary
+    | conflictIteration == upperBound = cdcl' (initialActivity clistOG Map.empty)
                                               (Level 0)
                                               []
                                               Map.empty
@@ -142,14 +141,13 @@ cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confCl
                                               learnedClist
                                               hardCoded
                                               0
-                                              (upperBoundary * 2)
+                                              (upperBound*2)
                                               startBoundary
                                               stats
                                               fullStats
                                               (restarts + 1)
 
-    -- current conflictiteration has same value like the current restart boundary. 
-    -- Restarts the algorithm with higher current boundary !!
+    -- current conflictiteration has same value like the current restart boundary. Restarts the algorithm with higher current boundary
     | conflictIteration == currentBoundary = cdcl' (initialActivity clistOG Map.empty)
                                                    (Level 0)
                                                    []
@@ -161,7 +159,7 @@ cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confCl
                                                    learnedClist
                                                    hardCoded
                                                    0
-                                                   upperBoundary
+                                                   upperBound
                                                    (currentBoundary * 2)
                                                    stats
                                                    fullStats
@@ -186,7 +184,7 @@ cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confCl
                            (makeTupleClauseListFromAnalyze analyzed))
                            periodUpdate2
                            (conflictIteration + 1)
-                           upperBoundary
+                           upperBound
                            currentBoundary
                            stats
                            fullStats
@@ -211,7 +209,7 @@ cdcl' aMap (Level lvl) tlist mappedTL clistOG learnedClist learnedClauses confCl
                         (calculateClauseList (getClauseListFromTriTuple res) list)
                         periodUpdate2
                         conflictIteration
-                        upperBoundary
+                        upperBound
                         currentBoundary
                         stats
                         fullStats
