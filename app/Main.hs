@@ -13,14 +13,15 @@ main = input =<< execParser opts
      <> header "Starting CDCL-SAT-Solver via Commandline " )
 
 input :: CDCLInput -> IO ()
-input (CDCLInput target False False) = readCdclFile target False False
-input (CDCLInput target True True) = readCdclFile target True True
-input (CDCLInput target False True) = readCdclFile target False True
-input (CDCLInput target True False) = readCdclFile target True False
+input (CDCLInput target v False False) = readCdclFile target v False False
+input (CDCLInput target v True True)   = readCdclFile target v True True
+input (CDCLInput target v False True)  = readCdclFile target v False True
+input (CDCLInput target v True False)  = readCdclFile target v True False
 
 data CDCLInput = CDCLInput
-  { file :: String
-  , opts :: Bool
+  { file  :: String
+  , optV  :: Bool
+  , opts  :: Bool
   , optsF :: Bool
   }
 
@@ -31,6 +32,10 @@ inputParse = CDCLInput
          <> short 'i'
          <> metavar "TARGETFILE"
          <> help "Target cnf-file which will be analysed from SAT-Solver" )
+      <*> switch
+          ( long "valuation"
+         <> short 'v'
+         <> help "Showing valuation of variables in case of SAT")
       <*> switch
           ( long "stats"
          <> short 's'
