@@ -60,10 +60,10 @@ solve t = case result of
             UNSAT_WITH_STATS _ _              -> Unsatisfiable
             where result = cdcl t True False False
 
--- | This function will start the Conflict-Driven Clause Learning (CDCL) Procedure.
+-- | This function will start the CDCL Procedure.
 --   To call this function do for example:
---   cdcl [[1,2,3],[2,5]] False False
---   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]] False False
+--   cdcl [[1,2,3],[2,5]]
+--   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]]
 --   The function will return the result of the cdcl' function.
 --   Function will immediately return SAT if ClauseList is null or UNSAT if an empty List is found within clist
 cdcl :: [[Integer]] -> Bool -> Bool -> Bool -> CDCLResult
