@@ -36,7 +36,7 @@ import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           CDCL.Conflict (analyzeConflict)
 import           CDCL.DPLL (rmPureVars)
- 
+
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 
@@ -109,23 +109,32 @@ cdcl clist valuation stats fullStats
 --   After that the recursion starts again with Unitpropagation.
 --   This happens until either SAT or UNSAT is returned as result.
 cdcl'
-  :: ActivityMap
-  -> Level
-  -> TupleClauseList
-  -> MappedTupleList
-  -> ClauseList
-  -> ClauseList
-  -> [Clause]
-  -> [Clause]
-  -> ClauseList
-  -> Period
-  -> Integer
-  -> Integer
-  -> Integer
-  -> Bool
-  -> Bool
-  -> Integer
-  -> CDCLResult
+  :: ActivityMap -- aMap : ActivityMap :: Literal -> Activity
+  -> Level -- (Level lvl)
+  -> TupleClauseList -- tlist : Tuple Clause List
+  -> MappedTupleList -- mappedTL : Mapped Tuple Clause List
+  -> ClauseList -- clistOG : Clause List in Original Form
+  -> ClauseList -- learnedClist
+  -> [Clause] -- learnedClauses
+  -> [Clause] -- confClauses
+  -> ClauseList -- clist : ClauseList :: [
+                --                          ReducedClauseAndOGClause :: (
+                --                              Clause :: [Literal :: Lit Integer]    -- Clause reduced with Unitresolution
+                --                              , Clause :: [Literal :: Lit Integer]  -- Clause in its original form
+                --                          )
+                --                       ]
+  -> Period -- period
+  -> Integer -- conflictIteration : Counts the conficts.
+             --                         if conflictIteration == upperBoundary
+             --                             or conflictIteration == currentBoundary
+             --                         then the algorithm will be restarted
+             --                             with higher upperBoundary currentBoundary.
+  -> Integer -- upperBoundary
+  -> Integer -- currentBoundary
+  -> Bool -- stats
+  -> Bool -- fullStats
+  -> Integer -- restarts
+  -> CDCLResult -- result
 cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confClauses clist period conflictIteration upperBound currentBoundary stats fullStats restarts
 
     -- First and Second Case are part of Restart Algorithm with Luby Sequence
