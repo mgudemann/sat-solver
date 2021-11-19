@@ -48,10 +48,6 @@ encodeTuple :: Tuple -> Int
 encodeTuple (Lit l, BTrue) = fromInteger l
 encodeTuple (Lit l, BFalse) = fromInteger (-l)
 
-decodeTuple :: Int -> Tuple
-decodeTuple i = if i < 0 then (Lit l, BFalse) else (Lit l, BTrue) 
-    where l = toInteger i
-
 -- | This function calls the solver without reporting any statistics. Returns
 -- list of literanls encoded as Integer.
 solve :: [[Integer]] -> SATResult
