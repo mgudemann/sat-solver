@@ -26,7 +26,6 @@ getPureVars' :: [[Integer]] -> [[Integer]] -> [Int]
 getPureVars' _ [] = []
 getPureVars' fullerm (x:xs) = getPureVars'' fullerm x ++ getPureVars' fullerm xs
 
-
 getPureVars'' :: [[Integer]] -> [Integer] -> [Int]
 getPureVars'' _ [] = []
 getPureVars'' fullerm (x:xs) = [i | isPureVar fullerm x] ++ getPureVars'' fullerm xs
@@ -34,17 +33,12 @@ getPureVars'' fullerm (x:xs) = [i | isPureVar fullerm x] ++ getPureVars'' fuller
 
 isPureVar :: [[Integer]] -> Integer -> Bool
 isPureVar [] _ = True
-isPureVar (x:xs) var = (not (containsVar x (-var))) && isPureVar xs var
-
-containsVar :: [Integer] -> Integer -> Bool
-containsVar [] _ = False
-containsVar (x:xs) var = (x == var) || containsVar xs var
+isPureVar (x:xs) var = (-var) `notElem` x && isPureVar xs var
 
 rmVars :: [[Integer]] -> [Int] -> [[Integer]]
-rmVars term [] = term
-rmVars term (x:xs) = rmVars (rmVar term x ) xs
+rmVars = Prelude.foldl rmVar
 
 rmVar :: [[Integer]] -> Int -> [[Integer]]
 rmVar [] _ = []
-rmVar (x:xs) var = [x | not (containsVar x i)] ++ rmVar xs var
+rmVar (x:xs) var = [x | i `notElem` x] ++ rmVar xs var
     where i = toInteger var
