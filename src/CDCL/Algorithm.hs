@@ -69,9 +69,9 @@ solve t = case result of
 cdcl :: [[Integer]] -> Bool -> Bool -> Bool -> CDCLResult
 cdcl clist valuation stats fullStats
     | checked = UNSAT
-    | null reducedTerm && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0
-    | null reducedTerm && stats = SAT_WITH_STATS [] 0 0 0 0
-    | null reducedTerm = SAT --[] Map.empty 0
+    | null clist && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0
+    | null clist && stats = SAT_WITH_STATS [] 0 0 0 0
+    | null clist = SAT --[] Map.empty 0
     | otherwise = case (valuation, result) of
                     (False, SAT_SOLUTION _)                    -> SAT
                     (False, SAT_WITH_STATS _ _ _ _ _)          -> SAT
