@@ -14,6 +14,8 @@ import qualified Picosat as PicoSAT
 spec :: Spec
 spec = do
     describe "Compare with picoSAT solver" $ do
+        it "compare SAT / UNSAT result term reduced to empty list" $ do
+          prop_picoSATcomparison [[NonZero 1, NonZero 2],[NonZero (-1)]]
         it "compare SAT / UNSAT results" $ do
           property $ \clauses -> prop_picoSATcomparison clauses
 
