@@ -275,6 +275,7 @@ calculateClauseList cl [] = cl
 --   Bsp: [[2,1,3],[-1]] [(1,0),(3,0),(2,0)] -> 0. CONFLICT
 --   Bsp: [[2,1,3]][(1,0),(2,0)] -> -1. Etwas wurde noch nicht belegt o. etwas wurde nicht positiv.
 interpret :: ClauseList -> TupleClauseList -> InterpretResult
+interpret [] _ = OK
 interpret t@(formel : xs) interpretation
 
     -- Case: Clause found which cant be evaluated to 0 or 1
