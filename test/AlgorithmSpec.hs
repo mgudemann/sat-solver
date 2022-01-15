@@ -29,8 +29,8 @@ prop_picoSATcomparison cl = withMaxSuccess 10000 ( monadicIO ( do
   let clauses = coerce cl
   picoSol <- run (PicoSAT.solve clauses)
   let cdclSol = cdcl (map (map fromIntegral) clauses) False False False
-  assert ( case (picoSol, cdclSol) of
-             (PicoSAT.Unsatisfiable, UNSAT) -> True
-             (PicoSAT.Unknown, _)           -> False
-             (PicoSAT.Solution _, SAT)      -> True
-             _                              -> False )))
+  ( case (picoSol, cdclSol) of
+      (PicoSAT.Unsatisfiable, UNSAT) -> pure $ collect "UNSAT"   True
+      (PicoSAT.Unknown, _)           -> pure $ collect "Unknown" False
+      (PicoSAT.Solution _, SAT)      -> pure $ collect "SAT"     True
+      _                              -> pure $ collect "no Idea" False )))
