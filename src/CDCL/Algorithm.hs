@@ -71,15 +71,15 @@ cdcl clist valuation stats fullStats
     | checked = UNSAT
     | null clist && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0
     | null clist && stats = SAT_WITH_STATS [] 0 0 0 0
-    | null clist = SAT --[] Map.empty 0
+    | null clist && valuation = SAT_SOLUTION [] --[] Map.empty 0
+    | null clist = SAT
     | otherwise = case (valuation, result) of
-                    (False, SAT_SOLUTION _)                    -> SAT
-                    (False, SAT_WITH_STATS _ _ _ _ _)          -> SAT
-                    (False, SAT_WITH_FULL_STATS _ _ _ _ _ _ _) -> SAT
-                    _                                          -> result
-    where (reducedTerm, _) = rmPureVars clist
-          checked = any null reducedTerm
-          transformedList = transformClauseList reducedTerm
+                    (False, SAT_SOLUTION        {}) -> SAT
+                    (False, SAT_WITH_STATS      {}) -> SAT
+                    (False, SAT_WITH_FULL_STATS {}) -> SAT
+                    _                               -> result
+    where checked = any null clist
+          transformedList = transformClauseList clist
           aMap = initialActivity transformedList Map.empty
           result = cdcl'
                   aMap
