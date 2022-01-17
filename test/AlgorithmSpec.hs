@@ -15,7 +15,12 @@ spec :: Spec
 spec = do
     describe "Compare with picoSAT solver" $ do
         it "compare SAT / UNSAT result term reduced to empty list" $ do
-          prop_picoSATcomparison [[NonZero 1, NonZero 2],[NonZero (-1)]]
+          let problem = [[1, 2], [- 1]]
+              csol = cdcl (map (map fromIntegral) problem) False False False
+          psol <- PicoSAT.solve problem
+          (case (psol, csol) of
+             (PicoSAT.Solution _, SAT) -> True
+             _                          -> False) `shouldBe` True
         it "compare SAT / UNSAT results" $ do
           property $ \clauses -> prop_picoSATcomparison clauses
 
@@ -24,8 +29,8 @@ prop_picoSATcomparison cl = withMaxSuccess 10000 ( monadicIO ( do
   let clauses = coerce cl
   picoSol <- run (PicoSAT.solve clauses)
   let cdclSol = cdcl (map (map fromIntegral) clauses) False False False
-  assert ( case (picoSol, cdclSol) of
-             (PicoSAT.Unsatisfiable, UNSAT) -> True
-             (PicoSAT.Unknown, _)           -> False
-             (PicoSAT.Solution _, SAT)      -> True
-             _                              -> False )))
+  ( case (picoSol, cdclSol) of
+      (PicoSAT.Unsatisfiable, UNSAT) -> pure $ collect "UNSAT"   True
+      (PicoSAT.Unknown, _)           -> pure $ collect "Unknown" False
+      (PicoSAT.Solution _, SAT)      -> pure $ collect "SAT"     True
+      _                              -> pure $ collect "no Idea" False )))
