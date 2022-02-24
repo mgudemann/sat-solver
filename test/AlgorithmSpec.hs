@@ -1,6 +1,10 @@
 module AlgorithmSpec where
-import           CDCL.Algorithm (cdcl)
-import           CDCL.Types (CDCLResult (..))
+import           CDCL.Algorithm 
+                    ( solve
+                    , cdcl)
+import           CDCL.Types
+                    ( SATResult (..)
+                    , CDCLResult (..))
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Test.Hspec
@@ -23,6 +27,23 @@ spec = do
              _                          -> False) `shouldBe` True
         it "compare SAT / UNSAT results" $ do
           property $ \clauses -> prop_picoSATcomparison clauses
+    describe "Pure reduction should provide a variable assignment" $ do
+        it "[[1, 2], [- 1]] is SAT with assignment" $ do
+            let problem = [[1, 2], [- 1]]
+                solution = solve problem
+
+                resultAssignment = (case solution of
+                  Satisfiable list -> list
+                  _                -> error "Unsatisfiable but expected (Satisfiable [2, -1])")
+            resultAssignment`shouldBe` [2, -1]
+        it "[[1, 2, 3], [- 1, - 2], [1]] is SAT with assignment" $ do
+            let problem = [[1, 2], [- 1]]
+                solution = solve problem
+
+                resultAssignment = (case solution of
+                  Satisfiable list -> list
+                  _                -> error "Unsatisfiable but expected (Satisfiable [3, -2, 1])")
+            resultAssignment`shouldBe` [2, -1]
 
 prop_picoSATcomparison :: [[NonZero Int]] -> Property
 prop_picoSATcomparison cl = withMaxSuccess 10000 ( monadicIO ( do

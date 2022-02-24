@@ -44,6 +44,12 @@ hardCoded = Period 30
 startBoundary = 20
 
 
+decodeTuple :: Int -> Tuple
+decodeTuple value = if value >= 0 
+    then (Lit (toInteger value), BTrue)
+    else (Lit (toInteger (-value)), BFalse)
+
+
 encodeTuple :: Tuple -> Int
 encodeTuple (Lit l, BTrue) = fromInteger l
 encodeTuple (Lit l, BFalse) = fromInteger (-l)
@@ -73,11 +79,14 @@ cdcl clist valuation stats fullStats
     | null clist && stats = SAT_WITH_STATS [] 0 0 0 0
     | null clist = SAT --[] Map.empty 0
     | otherwise = case (valuation, result) of
-                    (False, SAT_SOLUTION _)                    -> SAT
-                    (False, SAT_WITH_STATS _ _ _ _ _)          -> SAT
-                    (False, SAT_WITH_FULL_STATS _ _ _ _ _ _ _) -> SAT
-                    _                                          -> result
-    where (reducedTerm, _) = rmPureVars clist
+                    (False, SAT_SOLUTION _)                                                                                 -> SAT
+                    (False, SAT_WITH_STATS _ _ _ _ _)                                                                       -> SAT
+                    (False, SAT_WITH_FULL_STATS _ _ _ _ _ _ _)                                                              -> SAT
+                    (True, SAT_SOLUTION tupleList)                                                                          -> SAT_SOLUTION (tupleList ++ (map decodeTuple pureVars))
+                    (True, SAT_WITH_STATS tupleList decisions learned clauses restarts)                                     -> SAT_WITH_STATS (tupleList ++ (map decodeTuple pureVars)) decisions learned clauses restarts
+                    (True, SAT_WITH_FULL_STATS tupleList mappedTupleList learnedClauses decisions learned clauses restarts) -> SAT_WITH_FULL_STATS (tupleList ++ (map decodeTuple pureVars)) mappedTupleList learnedClauses decisions learned clauses restarts
+                    _                                                                                                       -> result
+    where (reducedTerm, pureVars) = rmPureVars clist
           checked = any null reducedTerm
           transformedList = transformClauseList reducedTerm
           aMap = initialActivity transformedList Map.empty
