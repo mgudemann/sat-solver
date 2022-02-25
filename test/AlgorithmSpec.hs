@@ -37,13 +37,13 @@ spec = do
                   _                -> error "Unsatisfiable but expected (Satisfiable [2, -1])")
             resultAssignment`shouldBe` [2, -1]
         it "[[1, 2, 3], [- 1, - 2], [1]] is SAT with assignment" $ do
-            let problem = [[1, 2], [- 1]]
+            let problem = [[1, 2, 3], [- 1, - 2], [1]]
                 solution = solve problem
 
                 resultAssignment = (case solution of
                   Satisfiable list -> list
                   _                -> error "Unsatisfiable but expected (Satisfiable [3, -2, 1])")
-            resultAssignment`shouldBe` [2, -1]
+            resultAssignment`shouldBe` [3, -2, 1]
 
 prop_picoSATcomparison :: [[NonZero Int]] -> Property
 prop_picoSATcomparison cl = withMaxSuccess 10000 ( monadicIO ( do
