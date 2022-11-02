@@ -23,6 +23,7 @@ import           Data.List
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
+import qualified Data.Set as Set (deleteAt, elemAt, null)
 
 -- | calculate the ActivityMap. calls itself recursively until every clause
 --   is calculated. Returns a filled ActivityMap.
@@ -39,17 +40,20 @@ initialActivity cList@(xs : ys) aList
 --   example : updateActivity [1,2] (IntMap.fromList [(1,1),(2,1),(3,2),(4,2)])
 --   result : fromList [(1,2),(2,2),(3,2),(4,2)]
 updateActivity :: Clause -> ActivityMap -> ActivityMap
-updateActivity [] aMap = aMap
-updateActivity clause@(xs : ys) aMap
+updateActivity clause aMap
+ | Set.null clause = aMap
+-- updateActivity clause@(xs : ys) aMap
 
     -- Current Literal is already in Map.
-    | Map.member xValue aMap = let updatedMap = Map.adjust increaseActivity xValue aMap in
-        updateActivity ys updatedMap
+ | Map.member xValue aMap = let updatedMap = Map.adjust increaseActivity xValue aMap in
+                              updateActivity ys updatedMap
 
     -- Current Literal is not in the Map.
-    |  Map.notMember xValue aMap = let updatedMap = Map.insert xValue (Activity 1) aMap in
-         updateActivity ys updatedMap
-    where xValue = if getLiteralValue xs < 0 then negateLiteralValue xs else xs
+ |  Map.notMember xValue aMap = let updatedMap = Map.insert xValue (Activity 1) aMap in
+                                  updateActivity ys updatedMap
+    where xs = Set.elemAt 0 clause
+          ys = Set.deleteAt 0 clause
+          xValue = if getLiteralValue xs < 0 then negateLiteralValue xs else xs
 
 
 -- | periodically call this function to half the activities in the map.
@@ -89,36 +93,42 @@ getHighestActivity [] aMap val = val
 --   getHighestActivity' [-1,2] (Map.fromList [(1,1),(2,1)]) (0,0)
 --   returns (3,6)
 getHighestActivity' :: Clause -> ActivityMap -> [LiteralActivity] -> [LiteralActivity]
-getHighestActivity' cl@(xs : ys) aMap val
+getHighestActivity' cl aMap val
+ | Set.null cl = val
 
-    -- Case: found activity is higher then current activity
-    | actVal > snd firstVal = getHighestActivity' ys aMap [(x, actVal)]
+ -- Case: found activity is higher then current activity
+ | actVal > snd firstVal = getHighestActivity' ys aMap [(x, actVal)]
 
-    -- Case: found activity has same activity value
-    | actVal == snd firstVal = getHighestActivity' ys aMap ((x, actVal) : val)
+ -- Case: found activity has same activity value
+ | actVal == snd firstVal = getHighestActivity' ys aMap ((x, actVal) : val)
 
-    -- Case: found activity has lower activity value
-    | otherwise = getHighestActivity' ys aMap val
-    where firstVal = head val
+ -- Case: found activity has lower activity value
+ | otherwise = getHighestActivity' ys aMap val
+    where xs = Set.elemAt 0 cl
+          ys = Set.deleteAt 0 cl
+          firstVal = head val
           x = if getLiteralValue xs < 0 then negateLiteralValue xs else xs
           actVal = Map.findWithDefault (Activity 0) x aMap
-getHighestActivity' [] _ x = x
 
 -- | Set the Tupelvalue based on the Literal.
 --   If the Literal with the highest activity has a minus prefix the tupel value will
 --   be set to 1 with the Literal getting a positive prefix in the tupel.
 --   Else the tupel will be set to the Literal with a 0 as second value.
 setLiteralViaActivity :: Clause -> LiteralActivity -> TupleClause
-setLiteralViaActivity (xs : ys) vAct
+setLiteralViaActivity clause vAct
+     --((Literal (-1), BNothing), Reason [Literal (-1)])
+ | Set.null clause = error "wrong input in LiteralActivity or Clause"
 
-    -- Case: the current Literal is a positive one and is found in vAct.
-    | xs == fst vAct = ((xs, BFalse), Decision)
 
-    -- Case: the current Literal is a negative one and is found in vAct when negated.
-    | negateLiteralValue xs == fst vAct = ((negateLiteralValue xs, BTrue), Decision)
-    | otherwise = setLiteralViaActivity ys vAct
-    where varValue = getLiteralValue xs
-setLiteralViaActivity [] vAct = error "wrong input in LiteralActivity or Clause"--((Literal (-1), BNothing), Reason [Literal (-1)])
+ -- Case: the current Literal is a positive one and is found in vAct.
+ | xs == fst vAct = ((xs, BFalse), Decision)
+
+ -- Case: the current Literal is a negative one and is found in vAct when negated.
+ | negateLiteralValue xs == fst vAct = ((negateLiteralValue xs, BTrue), Decision)
+ | otherwise = setLiteralViaActivity ys vAct
+  where xs = Set.elemAt 0 clause
+        ys = Set.deleteAt 0 clause
+
 
 -- | Get the shortest clause which contains the highest activity.
 --   Do this based on the given ClauseList and LiteralActivity. Returns

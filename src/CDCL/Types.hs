@@ -15,6 +15,9 @@ module CDCL.Types where
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
+import           Data.Set (Set)
+import qualified Data.Set as Set (empty, insert)
+
 -- | SATResult
 data SATResult = Satisfiable [Int]
                | Unsatisfiable
@@ -109,7 +112,7 @@ newtype Period = Period Integer
     deriving (Eq)
 
 -- | Clause defined as a List of Literals
-type Clause = [Literal]
+type Clause = Set Literal
 
 -- | Tuple of 2 Clauses
 --   First clause in tuple is reduced via Unitresolution
@@ -183,13 +186,13 @@ divideActivity (Activity i) = Activity (i `div` 2)
 transformClauseList :: [[Integer]] -> ClauseList
 transformClauseList [] = []
 transformClauseList (xs : ys)
-    | null ys = [transformClause xs []]
-    | otherwise = transformClause xs [] : transformClauseList ys
+    | null ys = [transformClause xs Set.empty]
+    | otherwise = transformClause xs Set.empty : transformClauseList ys
 -- | Transforms a list of Integers into a ReducedClauseAndOGClause
 transformClause :: [Integer] -> Clause -> ReducedClauseAndOGClause
 transformClause (xs : ys) varList
-    | null ys = (Lit xs : varList, Lit xs : varList)
-    | otherwise = transformClause ys (Lit xs : varList)
+    | null ys = (Set.insert (Lit xs)  varList, Set.insert (Lit xs)  varList)
+    | otherwise = transformClause ys (Set.insert (Lit xs) varList)
 -- | Checks if Interpretresult contains NOK.
 --   Return true if it does, else false
 getNOK :: InterpretResult -> Bool
