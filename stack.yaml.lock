@@ -7,27 +7,27 @@ packages:
 - completed:
     hackage: picosat-0.1.6@sha256:7d3130af636c6c8a0b373446a090daa15511d6cb0b264f4b921fa5d4a81b59a3,2138
     pantry-tree:
-      size: 541
       sha256: 4cb3a66ee7b3ca57b680ebe41815a5965b0860d191cdf08787bb78d0e2fb650b
+      size: 541
   original:
     hackage: picosat-0.1.6@sha256:7d3130af636c6c8a0b373446a090daa15511d6cb0b264f4b921fa5d4a81b59a3,2138
 - completed:
     hackage: timeit-2.0@sha256:0757796734c8bcc8cad97bac90d6db60e40f148b5d62699baf12fb8ec8939b34,1197
     pantry-tree:
-      size: 259
       sha256: 048f9c6dd792ea20dc178f67581bdba042d689e5dda3129614937c9f3c971a85
+      size: 259
   original:
     hackage: timeit-2.0
 - completed:
     hackage: optparse-applicative-0.16.1.0@sha256:d410cc76e288b93d4ee7e06addc0381a7eaea43bcee0c3ced03f05cadec2f2fc,4836
     pantry-tree:
-      size: 2979
       sha256: bfff15197c553035578163cd3da352bcddcf0f11f57ae40ead22ef6dd120c40c
+      size: 2979
   original:
     hackage: optparse-applicative-0.16.1.0
 snapshots:
 - completed:
-    size: 587126
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/8.yaml
-    sha256: 93a107557e8691ed5ca17beaee41e68222b142c48868fc8c04a4181fb233477d
-  original: lts-18.8
+    sha256: 79a786674930a89301b0e908fad2822a48882f3d01486117693c377b8edffdbe
+    size: 590102
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/27.yaml
+  original: lts-18.27
