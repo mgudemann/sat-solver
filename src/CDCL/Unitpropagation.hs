@@ -24,7 +24,7 @@ import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import qualified Data.Set as Set (elemAt, empty, filter)
+import qualified Data.Set as Set (delete, elemAt, empty, filter, member)
 
 -- | The function is the base for the unitpropagation procedure. It checks first if an
 --   unitclause exists. If it does, it will set the Literal so that the unitclause is solved.
@@ -67,7 +67,7 @@ unitSubsumption (firstList : xs) tuple
     -- Case: Literal was found. Remove the clause.
     | otherwise = unitSubsumption xs tuple
     where val = if snd tuple == BTrue then fst tuple else negateLiteralValue (fst tuple)
-          checked = val `elem` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
+          checked = val `Set.member` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
 
 unitSubsumption _ _ = []
 
@@ -81,11 +81,11 @@ unitResolution (firstList : xs) tuple
     | not checked = firstList : unitResolution xs tuple
 
     -- Case: Literal was found in current clause. Adjust the clause and readd it.
-    | otherwise = let list = Set.filter (/= val) (getClauseFromReducedClauseAndOGClause firstList) in
+    | otherwise = let list = Set.delete val (getClauseFromReducedClauseAndOGClause firstList) in
         (list, ogClause) : unitResolution xs tuple
     where val = let l@(Lit x) = fst tuple in
                   if snd tuple == BFalse then l else Lit (-x)
-          checked = val `elem` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
+          checked = val `Set.member` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
           ogClause = getOGFromReducedClauseAndOGClause firstList
 
 unitResolution _ _ = []
