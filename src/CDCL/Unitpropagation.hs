@@ -24,6 +24,7 @@ import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set (elemAt, empty, filter)
 
 -- | The function is the base for the unitpropagation procedure. It checks first if an
 --   unitclause exists. If it does, it will set the Literal so that the unitclause is solved.
@@ -47,12 +48,14 @@ getUnitClause :: ClauseList  -> ReducedClauseAndOGClause
 getUnitClause (clause : xs) = let listLength = length (getClauseFromReducedClauseAndOGClause clause) in
     if listLength == 1 then clause else getUnitClause xs
 
-getUnitClause _ = ([],[])
+getUnitClause _ = (Set.empty, Set.empty)
 
 -- | call this method on unit clauses only. If the value is less then 0 set a 0 in the tuple, else set 1
 setLiteral :: Clause  -> Tuple
-setLiteral clause = if getLiteralValue (head clause) < 0
-    then (negateLiteralValue (head clause), BFalse) else (head clause, BTrue) -- Need change here
+setLiteral clause =
+  let e = Set.elemAt 0 clause
+  in  if getLiteralValue e < 0
+      then (negateLiteralValue e, BFalse) else (e, BTrue) -- Need change here
 
 -- | Remove clauses which have removableVar as Literal.
 unitSubsumption :: ClauseList  -> Tuple -> ClauseList
@@ -78,7 +81,7 @@ unitResolution (firstList : xs) tuple
     | not checked = firstList : unitResolution xs tuple
 
     -- Case: Literal was found in current clause. Adjust the clause and readd it.
-    | otherwise = let list = filter (/= val) (getClauseFromReducedClauseAndOGClause firstList) in
+    | otherwise = let list = Set.filter (/= val) (getClauseFromReducedClauseAndOGClause firstList) in
         (list, ogClause) : unitResolution xs tuple
     where val = let l@(Lit x) = fst tuple in
                   if snd tuple == BFalse then l else Lit (-x)

@@ -36,16 +36,18 @@ import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           CDCL.Conflict (analyzeConflict)
 import           CDCL.DPLL (rmPureVars)
- 
+
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
+import qualified Data.Set as Set (deleteAt, elemAt)
+
 
 hardCoded = Period 30
 startBoundary = 20
 
 
 decodeTuple :: Int -> Tuple
-decodeTuple value = if value >= 0 
+decodeTuple value = if value >= 0
     then (Lit (toInteger value), BTrue)
     else (Lit (toInteger (-value)), BFalse)
 
@@ -280,7 +282,7 @@ interpret t@(formel : xs) interpretation
 --   NOK (emptyClause) <-- Clause which returns 0 with the set Literals.
 --   UNRESOLVED <-- No Literal evaluated the clause to 1.
 interpret' :: Clause -> TupleClauseList -> Bool -> InterpretResult
-interpret' (formel : xs) interpretation boolValue
+interpret' clause interpretation boolValue
 
     -- if calculated tupelValue isn't set and xs is null return UNRESOLVED
     | tupelValue == BNothing   && null xs = UNRESOLVED
@@ -292,11 +294,13 @@ interpret' (formel : xs) interpretation boolValue
     | (formelValue >= 0 && tupelValue == BTrue) || (formelValue < 0 && tupelValue == BFalse) = OK
 
     -- Current Literal evalutes to 0 and xs is null. If it never entered to the second case it will return NOK. Otherwise it will enter below case to return UNRESOLVED
-    | ((formelValue >= 0 && tupelValue == BFalse) || (formelValue < 0 && tupelValue == BTrue))  && null xs && not boolValue = NOK  (formel :  xs)
+    | ((formelValue >= 0 && tupelValue == BFalse) || (formelValue < 0 && tupelValue == BTrue))  && null xs && not boolValue = NOK  clause
 
     | boolValue && null xs = UNRESOLVED
     | otherwise = interpret' xs interpretation boolValue
-        where formelValue = getLiteralValue formel
+        where formel      = Set.elemAt 0 clause
+              xs          = Set.deleteAt 0 clause
+              formelValue = getLiteralValue formel
               varValue = if formelValue < 0 then negateLiteralValue formel else formel
               tupelValue = searchTuple varValue interpretation
 
