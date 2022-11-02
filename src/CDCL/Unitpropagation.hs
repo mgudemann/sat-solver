@@ -37,8 +37,7 @@ unitPropagation clist tlist lvl mapped
           calcTuple = setLiteral fstElem
           ogClause = Reason (getOGFromReducedClauseAndOGClause unitClause)
           updatedMap = pushToMappedTupleList mapped lvl calcTuple ogClause
-          subsumptionC = unitSubsumption clist calcTuple []
-          resolutionC = unitResolution subsumptionC calcTuple []
+          resolutionC = unitSubsumeResolve clist calcTuple []
 
 -- | checks if an unit clause exists in the given list of lists. if one exists return the list.
 getUnitClause :: ClauseList  -> ReducedClauseAndOGClause
