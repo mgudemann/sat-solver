@@ -30,7 +30,7 @@ import           CDCL.Types (Activity (..), ActivityMap, BoolVal (..),
                      negateLiteralValue, transformClauseList)
 
 import           CDCL.Unitpropagation (unitPropagation, unitResolution,
-                     unitSubsumption)
+                     unitSubsumeResolve, unitSubsumption)
 
 import           CDCL.MapLogic (pushToMappedTupleList)
 
@@ -254,12 +254,11 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
 -- | calculates the clauselist which will be given to unitpropagation.
 --   returns when everything of tupelClauselist was calculated
 calculateClauseList :: ClauseList -> TupleClauseList -> ClauseList
+calculateClauseList cl [] = cl
 calculateClauseList cl (xs : ys)
     | null ys = reso
     | otherwise = calculateClauseList reso ys
-    where sub = unitSubsumption cl (fst xs) []
-          reso = unitResolution sub (fst xs) []
-calculateClauseList cl [] = cl
+    where reso = unitSubsumeResolve cl (fst xs) [] --unitResolution sub (fst xs) []
 
 -- | Interprets a given ClauseList based on a given TupleClauseList. Will call itself recursively
 --   until a UNRESOLVED, NOK or OK is returned
