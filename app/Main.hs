@@ -1,13 +1,12 @@
 module Main where
 
 import           CDCL.CDCLFilereader (readCdclFile)
-import           Data.Semigroup ((<>))
 import           Options.Applicative
 
 main :: IO ()
-main = input =<< execParser opts
+main = input =<< execParser options
   where
-    opts = info (inputParse <**> helper)
+    options = info (inputParse <**> helper)
       ( fullDesc
      <> progDesc "Print a CDCL Result for TARGETFILE"
      <> header "Starting CDCL-SAT-Solver via Commandline " )

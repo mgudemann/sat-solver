@@ -42,7 +42,11 @@ import           Data.Maybe
 import qualified Data.Set as Set (deleteAt, elemAt)
 
 
+hardCoded :: Period
 hardCoded = Period 30
+
+
+startBoundary :: Integer
 startBoundary = 20
 
 
@@ -82,11 +86,11 @@ cdcl clist valuation stats fullStats
     | null clist = SAT --[] Map.empty 0
     | otherwise = case (valuation, result) of
                     (False, SAT_SOLUTION _)                                                                                 -> SAT
-                    (False, SAT_WITH_STATS _ _ _ _ _)                                                                       -> SAT
-                    (False, SAT_WITH_FULL_STATS _ _ _ _ _ _ _)                                                              -> SAT
-                    (True, SAT_SOLUTION tupleList)                                                                          -> SAT_SOLUTION (tupleList ++ (map decodeTuple pureVars))
-                    (True, SAT_WITH_STATS tupleList decisions learned clauses restarts)                                     -> SAT_WITH_STATS (tupleList ++ (map decodeTuple pureVars)) decisions learned clauses restarts
-                    (True, SAT_WITH_FULL_STATS tupleList mappedTupleList learnedClauses decisions learned clauses restarts) -> SAT_WITH_FULL_STATS (tupleList ++ (map decodeTuple pureVars)) mappedTupleList learnedClauses decisions learned clauses restarts
+                    (False, SAT_WITH_STATS { })                                                                       -> SAT
+                    (False, SAT_WITH_FULL_STATS { })                                                              -> SAT
+                    (True, SAT_SOLUTION tupleList)                                                                          -> SAT_SOLUTION (tupleList ++ map decodeTuple pureVars)
+                    (True, SAT_WITH_STATS tupleList decisions learned clauses restarts)                                     -> SAT_WITH_STATS (tupleList ++ map decodeTuple pureVars) decisions learned clauses restarts
+                    (True, SAT_WITH_FULL_STATS tupleList mappedTupleList learnedClauses decisions learned clauses restarts) -> SAT_WITH_FULL_STATS (tupleList ++ map decodeTuple pureVars) mappedTupleList learnedClauses decisions learned clauses restarts
                     _                                                                                                       -> result
     where (reducedTerm, pureVars) = rmPureVars clist
           checked = any null reducedTerm
@@ -248,7 +252,7 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
 -- | calculates the clauselist which will be given to unitpropagation.
 --   returns when everything of tupelClauselist was calculated
 calculateClauseList :: ClauseList -> TupleClauseList -> ClauseList
-calculateClauseList cl tlist@(xs : ys)
+calculateClauseList cl (xs : ys)
     | null ys = reso
     | otherwise = calculateClauseList reso ys
     where sub = unitSubsumption cl (fst xs) []
@@ -261,7 +265,7 @@ calculateClauseList cl [] = cl
 --   Bsp: [[2,1,3]][(1,0),(2,0)] -> -1. Etwas wurde noch nicht belegt o. etwas wurde nicht positiv.
 interpret :: ClauseList -> TupleClauseList -> InterpretResult
 interpret [] _ = OK
-interpret t@(formel : xs) interpretation
+interpret (formel : xs) interpretation
 
     -- Case: Clause found which cant be evaluated to 0 or 1
     | null interpretation || interpreted == UNRESOLVED = UNRESOLVED

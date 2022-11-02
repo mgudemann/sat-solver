@@ -15,14 +15,11 @@ module CDCL.Decisionalalgorithm (initialActivity, updateActivity, halveActivityM
 
 import           CDCL.Types (Activity (..), ActivityMap, BoolVal (..), Clause,
                      ClauseList, Literal (..), LiteralActivity, Reason (..),
-                     Tuple, TupleClause, divideActivity, getActivityValue,
+                     TupleClause, divideActivity, getActivityValue,
                      getClauseFromReducedClauseAndOGClause, getLiteralValue,
                      increaseActivity, negateLiteralValue)
-import qualified CDCL.Types as TypeC
 import           Data.List
-import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import           Data.Maybe
 import qualified Data.Set as Set (deleteAt, elemAt, null)
 
 -- | calculate the ActivityMap. calls itself recursively until every clause
@@ -30,7 +27,7 @@ import qualified Data.Set as Set (deleteAt, elemAt, null)
 --   example: initialActivity [[1,2,3,4],[3,4]] (IntMap.fromList [])
 --   result: fromList [(1,1),(2,1),(3,2),(4,2)]
 initialActivity :: ClauseList -> ActivityMap -> ActivityMap
-initialActivity cList@(xs : ys) aList
+initialActivity (xs : ys) aList
     | not (null ys) = initialActivity ys updated
     | otherwise = updated
     where updated = updateActivity (getClauseFromReducedClauseAndOGClause xs) aList
@@ -70,7 +67,7 @@ halveActivityMap = foldr (Map.adjust divideActivity)
 --   ([Literal 3, Literal 7],[Literal 3, Literal 7])]
 --   (Map.fromList [(Literal 1, Activity 5),(Literal 3, Activity 6),(Literal 5,Activity 2),(Literal 7,Activity 7)]) (Literal 0, Activity 0)
 getHighestActivity :: ClauseList -> ActivityMap -> [LiteralActivity] -> [LiteralActivity]
-getHighestActivity cList@(xs : ys) aMap val
+getHighestActivity (xs : ys) aMap val
 
     -- Case: Found Activity is higher then current activity
     | getActivityValue (snd firstVal) < getActivityValue (snd foundAct) = getHighestActivity ys aMap highestValInClause
@@ -82,11 +79,10 @@ getHighestActivity cList@(xs : ys) aMap val
     | getActivityValue (snd firstVal) == getActivityValue (snd foundAct) = getHighestActivity ys aMap list
     where firstVal = head val
           highestValInClause = getHighestActivity' (getClauseFromReducedClauseAndOGClause xs) aMap val
-          firstActVal = getActivityValue (snd firstVal)
           foundAct = head highestValInClause
           list = nub (val ++ highestValInClause)
 
-getHighestActivity [] aMap val = val
+getHighestActivity [] _ val = val
 
 -- | return the highest activity in a clause.
 --   example getHighestActivity' [-1,3,5] (Map.fromList [(1,5),(3,6),(5,2)]) (0,0)
@@ -166,4 +162,4 @@ checkClauseForLiteral :: Clause -> [LiteralActivity] -> Bool
 checkClauseForLiteral cl (x : ys)
     | fst x `elem` cl || negateLiteralValue (fst x) `elem` cl = True
     | otherwise = checkClauseForLiteral cl ys
-checkClauseForLiteral cl [] = False
+checkClauseForLiteral _ [] = False

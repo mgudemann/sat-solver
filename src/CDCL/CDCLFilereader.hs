@@ -1,8 +1,6 @@
 module CDCL.CDCLFilereader (readCdclFile) where
 
 import           CDCL.Algorithm (cdcl)
-import           CDCL.Types (CDCLResult (..), ClauseList)
-import           Control.Monad
 import           System.IO
 import           System.TimeIt
 
@@ -34,10 +32,10 @@ loopCheck handle clist = do
         f <- hGetChar handle
         if checkCNFStart f then
             do
-                m <- hGetLine handle
+                _ <- hGetLine handle
                 loopCheck' handle clist
         else do
-            m <- hGetLine handle
+            _ <- hGetLine handle
             loopCheck handle clist
 
 loopCheck' :: Handle -> [[Integer]] -> IO (Maybe [[Integer]])
@@ -51,7 +49,7 @@ loopCheck' handle clist = do
             pure (Just ( reverse clist))
         else if checkComment firstChar || firstChar == '\n' then
             do
-                remove <- hGetLine handle
+                _ <- hGetLine handle
                 loopCheck' handle clist
         else do
             content <- hGetLine handle

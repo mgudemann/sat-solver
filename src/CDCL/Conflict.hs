@@ -1,16 +1,13 @@
 module CDCL.Conflict (analyzeConflict, calcReason) where
 
-import           CDCL.Types (ActivityMap, Clause, ClauseList, Level (..),
-                     Literal (..), MappedTupleList, Reason (..),
-                     TupleClauseList, decreaseLvl, getLevel, getReason,
-                     negateLiteralValue)
+import           CDCL.Types (ActivityMap, Clause, Level (..), Literal (..),
+                     MappedTupleList, TupleClauseList, decreaseLvl, getLevel,
+                     getReason, negateLiteralValue)
 
 import           CDCL.Decisionalalgorithm (updateActivity)
 
 import           CDCL.MapLogic (deleteLvl)
 
-import           Data.List
-import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 import qualified Data.Set as Set

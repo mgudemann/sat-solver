@@ -2,12 +2,12 @@
 
 module CDCL.DPLL (rmPureVars) where
 
-import Data.Set
+import           Data.Set
 
 -- | This function removes all clauses that contains pure variables
 --   and thus that become pure due to reductions.
 --   It retruns te reduced term and a list of pure variables
-rmPureVars 
+rmPureVars
     :: [[Integer]]          -- ^ The '[[Integer]]' argument repesents the input term.
     -> ([[Integer]], [Int]) -- ^ The '([[Integer]], [Int])' result repesents the reduced term as the first element and the pure vars as the second element.
 rmPureVars term = rmPureVars' (term, [])
