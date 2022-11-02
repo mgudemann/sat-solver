@@ -11,12 +11,8 @@
 ---------------------------------------------------------------------
 module CDCL.MapLogic (pushToMappedTupleList, deleteLvl) where
 
-import           CDCL.Types (BoolVal (..), Clause, ClauseList, Level (..),
-                     MappedTupleList, Reason (..), ReducedClauseAndOGClause,
-                     TriTuple, Tuple, TupleClause, TupleClauseList)
-import qualified CDCL.Types as TypesC
+import           CDCL.Types (Level (..), MappedTupleList, Reason (..), Tuple)
 
-import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 
@@ -31,7 +27,7 @@ pushToMappedTupleList maptl lvl tupel reason
     | otherwise = maptl
     where f = Map.lookup lvl maptl
           check = filter (((== fst tupel) . fst).fst) (fromMaybe [] f)
-          m x = Just (fromMaybe [] f ++ [(tupel, reason)]) -- Not allowed to change "++" to ":", as it will change the decision map
+          m _ = Just (fromMaybe [] f ++ [(tupel, reason)]) -- Not allowed to change "++" to ":", as it will change the decision map
 
 -- | Function removes the given level
 deleteLvl :: Level -> MappedTupleList  -> MappedTupleList
