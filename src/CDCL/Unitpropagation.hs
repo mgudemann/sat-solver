@@ -66,7 +66,8 @@ unitSubsumption (firstList : xs) tuple
 
     -- Case: Literal was found. Remove the clause.
     | otherwise = unitSubsumption xs tuple
-    where val = if snd tuple == BTrue then fst tuple else negateLiteralValue (fst tuple)
+    where val = let Lit x = fst tuple
+                in  if snd tuple == BTrue then Lit x else Lit (-x)
           checked = val `Set.member` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
 
 unitSubsumption _ _ = []
@@ -75,17 +76,10 @@ unitSubsumption _ _ = []
 --   For example a negated Literal was resolved, which would remove
 --   the positive ones.
 unitResolution :: ClauseList -> Tuple -> ClauseList
-unitResolution (firstList : xs) tuple
-
-    -- Case: Literal is not found in the current Clause. Dont adjust it.
-    | not checked = firstList : unitResolution xs tuple
-
-    -- Case: Literal was found in current clause. Adjust the clause and readd it.
-    | otherwise = let list = Set.delete val (getClauseFromReducedClauseAndOGClause firstList) in
-        (list, ogClause) : unitResolution xs tuple
+unitResolution ((rClause, ogClause) : xs) tuple =
+  (list, ogClause) : unitResolution xs tuple
     where val = let l@(Lit x) = fst tuple in
                   if snd tuple == BFalse then l else Lit (-x)
-          checked = val `Set.member` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
-          ogClause = getOGFromReducedClauseAndOGClause firstList
+          list = Set.delete val rClause
 
 unitResolution _ _ = []
