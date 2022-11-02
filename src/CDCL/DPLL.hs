@@ -2,7 +2,8 @@
 
 module CDCL.DPLL (rmPureVars) where
 
-import           Data.Set
+import           Data.Set (Set, (\\))
+import qualified Data.Set as Set
 
 -- | This function removes all clauses that contains pure variables
 --   and thus that become pure due to reductions.
@@ -18,30 +19,18 @@ rmPureVars' t = if t == t' then t else rmPureVars' t'
 
 rmPureVars'' :: ([[Integer]], [Int]) -> ([[Integer]], [Int])
 rmPureVars'' (term, removedVars) = (reduzedTerm, removedVars ++ pureVars)
-    where pureVars = getPureVars term
+    where pureVars = collectPure term -- getPureVars term
           reduzedTerm = rmVars term pureVars
 
--- | This function finds all pure varibales in a given term.
---   It a list of pure variables
-getPureVars :: [[Integer]] -> [Int]
-getPureVars term = result
-    where pureVars = getPureVars' term term -- get pureVars
-          set = fromList pureVars --remove duplicates
-          result = toList set
-
-getPureVars' :: [[Integer]] -> [[Integer]] -> [Int]
-getPureVars' _ [] = []
-getPureVars' fullerm (x:xs) = getPureVars'' fullerm x ++ getPureVars' fullerm xs
-
-getPureVars'' :: [[Integer]] -> [Integer] -> [Int]
-getPureVars'' _ [] = []
-getPureVars'' fullerm (x:xs) = [i | isPureVar fullerm x] ++ getPureVars'' fullerm xs
-    where i = fromIntegral x
-
--- | This function decides if a given variable is pure in the given term.
-isPureVar :: [[Integer]] -> Integer -> Bool
-isPureVar [] _ = True
-isPureVar (x:xs) var = (-var) `notElem` x && isPureVar xs var
+collectPure :: [[Integer]] -> [Int]
+collectPure cls =
+  let pos = fmap (Set.fromList . map fromIntegral . Prelude.filter (> 0)) cls
+      neg = fmap (Set.fromList . map (fromIntegral . (\x -> -x)) . Prelude.filter (< 0)) cls
+      negSet' = Set.unions neg
+      posSet' = Set.unions pos
+      negSet  = negSet' \\ posSet'
+      posSet  = posSet' \\ negSet'
+  in  Set.toList (Set.map (*(-1)) negSet `Set.union` posSet)
 
 -- | This function finds removesall all clauses that contains the given pure variables.
 rmVars :: [[Integer]] -> [Int] -> [[Integer]]
