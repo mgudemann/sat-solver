@@ -12,6 +12,7 @@
 ---------------------------------------------------------------------
 module CDCL.Types where
 
+import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
 import           Data.Set (Set)
@@ -134,12 +135,12 @@ type TupleClause = (Tuple, Reason)
 -- | TupleClauseList is a list of TupleClause
 type TupleClauseList = [TupleClause]
 
--- | Defined as Map.Map Integer TupleList
-type MappedTupleList = Map.Map Level TupleClauseList
+-- | Defined as Map Integer TupleList
+type MappedTupleList = Map Level TupleClauseList
 
 -- | Shows how often a Literal is found in the formulas
--- | Defined as Map.Map Literal Activity
-type ActivityMap = Map.Map Literal Activity
+-- | Defined as Map Literal Activity
+type ActivityMap = Map Literal Activity
 
 -- | Is a single Tuple containing the Literal and activty
 --   Defined as (Literal, Activty)
@@ -187,11 +188,14 @@ transformClauseList [] = []
 transformClauseList (xs : ys)
     | null ys = [transformClause xs Set.empty]
     | otherwise = transformClause xs Set.empty : transformClauseList ys
+
 -- | Transforms a list of Integers into a ReducedClauseAndOGClause
 transformClause :: [Integer] -> Clause -> ReducedClauseAndOGClause
 transformClause (xs : ys) varList
-    | null ys = (Set.insert (Lit xs)  varList, Set.insert (Lit xs)  varList)
-    | otherwise = transformClause ys (Set.insert (Lit xs) varList)
+    | null ys = (newSet, newSet)
+    | otherwise = transformClause ys newSet
+      where newSet = Set.insert (Lit xs) varList
+
 -- | Checks if Interpretresult contains NOK.
 --   Return true if it does, else false
 getNOK :: InterpretResult -> Bool

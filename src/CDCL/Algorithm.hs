@@ -37,6 +37,7 @@ import           CDCL.MapLogic (pushToMappedTupleList)
 import           CDCL.Conflict (analyzeConflict)
 import           CDCL.DPLL (rmPureVars)
 
+import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 import qualified Data.Set as Set (deleteAt, elemAt)
@@ -232,7 +233,8 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
     where res = unitPropagation clist tlist (Level lvl) mappedTL
           tupleRes = getTupleClauseListFromTriTuple res
           updatedMap = getMappedTupleListFromTriTuple res
-          interpreted = interpret learnedClist tupleRes
+          litBoolMap = createLitBoolMap tupleRes
+          interpreted = interpret learnedClist litBoolMap
 
           periodUpdate = decreasePeriod period
           halvedActivity = if periodUpdate == Period 0 then halveActivityMap aMap (Map.keys aMap) else aMap
@@ -263,7 +265,7 @@ calculateClauseList cl [] = cl
 --   until a UNRESOLVED, NOK or OK is returned
 --   Bsp: [[2,1,3],[-1]] [(1,0),(3,0),(2,0)] -> 0. CONFLICT
 --   Bsp: [[2,1,3]][(1,0),(2,0)] -> -1. Etwas wurde noch nicht belegt o. etwas wurde nicht positiv.
-interpret :: ClauseList -> TupleClauseList -> InterpretResult
+interpret :: ClauseList -> Map Literal BoolVal -> InterpretResult
 interpret [] _ = OK
 interpret (formel : xs) interpretation
 
@@ -280,12 +282,13 @@ interpret (formel : xs) interpretation
     | otherwise = interpreted --interpret' (snd formel) interpretation False
     where interpreted = interpret' (getOGFromReducedClauseAndOGClause formel) interpretation False
 
+
 -- | Interprets a single clause of a formula
 --   It will return either
 --   OK
 --   NOK (emptyClause) <-- Clause which returns 0 with the set Literals.
 --   UNRESOLVED <-- No Literal evaluated the clause to 1.
-interpret' :: Clause -> TupleClauseList -> Bool -> InterpretResult
+interpret' :: Clause -> Map Literal BoolVal  -> Bool -> InterpretResult
 interpret' clause interpretation boolValue
 
     -- if calculated tupelValue isn't set and xs is null return UNRESOLVED
@@ -309,22 +312,19 @@ interpret' clause interpretation boolValue
               tupelValue = searchTuple varValue interpretation
 
 -- | Get the set value from the tupelClauselist.
-searchTuple :: Literal -> TupleClauseList -> BoolVal
-searchTuple xval (xs : ys)
-    | fst tuple == xval = snd tuple
-    | not (null ys) = searchTuple xval ys
-    | otherwise = BNothing
-    where tuple = fst xs
-
-searchTuple _ [] = BNothing
+searchTuple :: Literal -> Map Literal BoolVal -> BoolVal
+searchTuple xval m = fromMaybe BNothing (Map.lookup xval m)
 
 -- | returns the clauseList from unitPropagation
 getClauseListFromTriTuple :: TriTuple -> ClauseList
 getClauseListFromTriTuple (x, _, _) = x
 
 -- | returns the TupleClauseList from unitPropagation
-getTupleClauseListFromTriTuple ::  TriTuple -> TupleClauseList
+getTupleClauseListFromTriTuple :: TriTuple -> TupleClauseList
 getTupleClauseListFromTriTuple (_, x, _) = x
+
+createLitBoolMap :: TupleClauseList -> Map Literal BoolVal
+createLitBoolMap x = Map.fromList $ map fst x
 
 -- | returns the MappedTupleList from unitPropagation
 getMappedTupleListFromTriTuple :: TriTuple -> MappedTupleList
