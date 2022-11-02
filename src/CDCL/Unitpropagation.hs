@@ -18,13 +18,10 @@ import           CDCL.Types (BoolVal (..), Clause, ClauseList, Level,
                      TupleClauseList, getClauseFromReducedClauseAndOGClause,
                      getLiteralValue, getOGFromReducedClauseAndOGClause,
                      negateLiteralValue)
-import qualified CDCL.Types as TypesC
 
 import           CDCL.MapLogic (pushToMappedTupleList)
 
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
-import qualified Data.Set as Set (delete, elemAt, empty, filter, member)
+import qualified Data.Set as Set (delete, elemAt, empty, member)
 
 -- | The function is the base for the unitpropagation procedure. It checks first if an
 --   unitclause exists. If it does, it will set the Literal so that the unitclause is solved.
