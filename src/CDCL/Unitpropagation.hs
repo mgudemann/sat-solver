@@ -13,10 +13,11 @@ module CDCL.Unitpropagation (getUnitClause, unitSubsumption,
     unitResolution, unitPropagation) where
 
 import           CDCL.Types (BoolVal (..), Clause, ClauseList, Level,
-                     MappedTupleList, Reason (..), ReducedClauseAndOGClause,
-                     TriTuple, Tuple, TupleClauseList,
-                     getClauseFromReducedClauseAndOGClause, getLiteralValue,
-                     getOGFromReducedClauseAndOGClause, negateLiteralValue)
+                     Literal (..), MappedTupleList, Reason (..),
+                     ReducedClauseAndOGClause, TriTuple, Tuple,
+                     TupleClauseList, getClauseFromReducedClauseAndOGClause,
+                     getLiteralValue, getOGFromReducedClauseAndOGClause,
+                     negateLiteralValue)
 import qualified CDCL.Types as TypesC
 
 import           CDCL.MapLogic (pushToMappedTupleList)
@@ -79,7 +80,8 @@ unitResolution (firstList : xs) tuple
     -- Case: Literal was found in current clause. Adjust the clause and readd it.
     | otherwise = let list = filter (/= val) (getClauseFromReducedClauseAndOGClause firstList) in
         (list, ogClause) : unitResolution xs tuple
-    where val = if snd tuple == BFalse then fst tuple else negateLiteralValue (fst tuple)
+    where val = let l@(Lit x) = fst tuple in
+                  if snd tuple == BFalse then l else Lit (-x)
           checked = val `elem` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
           ogClause = getOGFromReducedClauseAndOGClause firstList
 
