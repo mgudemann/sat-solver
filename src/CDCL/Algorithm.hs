@@ -251,8 +251,8 @@ calculateClauseList :: ClauseList -> TupleClauseList -> ClauseList
 calculateClauseList cl tlist@(xs : ys)
     | null ys = reso
     | otherwise = calculateClauseList reso ys
-    where sub = unitSubsumption cl (fst xs)
-          reso = unitResolution sub (fst xs)
+    where sub = unitSubsumption cl (fst xs) []
+          reso = unitResolution sub (fst xs) []
 calculateClauseList cl [] = cl
 
 -- | Interprets a given ClauseList based on a given TupleClauseList. Will call itself recursively

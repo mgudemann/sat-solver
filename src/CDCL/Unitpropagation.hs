@@ -40,8 +40,8 @@ unitPropagation clist tlist lvl mapped
           calcTuple = setLiteral fstElem
           ogClause = Reason (getOGFromReducedClauseAndOGClause unitClause)
           updatedMap = pushToMappedTupleList mapped lvl calcTuple ogClause
-          subsumptionC = unitSubsumption clist calcTuple
-          resolutionC = unitResolution subsumptionC calcTuple
+          subsumptionC = unitSubsumption clist calcTuple []
+          resolutionC = unitResolution subsumptionC calcTuple []
 
 -- | checks if an unit clause exists in the given list of lists. if one exists return the list.
 getUnitClause :: ClauseList  -> ReducedClauseAndOGClause
@@ -58,28 +58,28 @@ setLiteral clause =
       then (negateLiteralValue e, BFalse) else (e, BTrue) -- Need change here
 
 -- | Remove clauses which have removableVar as Literal.
-unitSubsumption :: ClauseList  -> Tuple -> ClauseList
-unitSubsumption (firstList : xs) tuple
+unitSubsumption :: ClauseList  -> Tuple -> ClauseList -> ClauseList
+unitSubsumption (firstList : xs) tuple acc
 
     -- Case: Literal is not found in current clause. Readd it to the ClauseList
-    | not checked = firstList : unitSubsumption xs tuple
+    | not checked = unitSubsumption xs tuple (firstList : acc)
 
     -- Case: Literal was found. Remove the clause.
-    | otherwise = unitSubsumption xs tuple
+    | otherwise = unitSubsumption xs tuple acc
     where val = let Lit x = fst tuple
                 in  if snd tuple == BTrue then Lit x else Lit (-x)
           checked = val `Set.member` getClauseFromReducedClauseAndOGClause firstList -- checks if val is inside list
 
-unitSubsumption _ _ = []
+unitSubsumption _ _ acc = acc
 
 -- | remove negated Literal of the Literal which was set
 --   For example a negated Literal was resolved, which would remove
 --   the positive ones.
-unitResolution :: ClauseList -> Tuple -> ClauseList
-unitResolution ((rClause, ogClause) : xs) tuple =
-  (list, ogClause) : unitResolution xs tuple
+unitResolution :: ClauseList -> Tuple -> ClauseList -> ClauseList
+unitResolution ((rClause, ogClause) : xs) tuple acc =
+  unitResolution xs tuple ((list, ogClause) : acc)
     where val = let l@(Lit x) = fst tuple in
                   if snd tuple == BFalse then l else Lit (-x)
           list = Set.delete val rClause
 
-unitResolution _ _ = []
+unitResolution _ _ acc = acc
