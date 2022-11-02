@@ -29,14 +29,14 @@ import           CDCL.Types (Activity (..), ActivityMap, BoolVal (..),
                      getOGFromReducedClauseAndOGClause, increaseLvl,
                      negateLiteralValue, transformClauseList)
 
-import           CDCL.Unitpropagation (unitPropagation, unitResolution,
-                     unitSubsumption)
+import           CDCL.Unitpropagation (unitPropagation, unitSubsumeResolve)
 
 import           CDCL.MapLogic (pushToMappedTupleList)
 
 import           CDCL.Conflict (analyzeConflict)
 import           CDCL.DPLL (rmPureVars)
 
+import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe
 import qualified Data.Set as Set (deleteAt, elemAt)
@@ -52,17 +52,17 @@ startBoundary = 20
 
 decodeTuple :: Int -> Tuple
 decodeTuple value = if value >= 0
-    then (Lit (toInteger value), BTrue)
-    else (Lit (toInteger (-value)), BFalse)
+    then (Lit value, BTrue)
+    else (Lit (-value), BFalse)
 
 
 encodeTuple :: Tuple -> Int
-encodeTuple (Lit l, BTrue) = fromInteger l
-encodeTuple (Lit l, BFalse) = fromInteger (-l)
+encodeTuple (Lit l, BTrue) = l
+encodeTuple (Lit l, BFalse) = -l
 
 -- | This function calls the solver without reporting any statistics. Returns
 -- list of literanls encoded as Integer.
-solve :: [[Integer]] -> SATResult
+solve :: [[Int]] -> SATResult
 solve t = case result of
             SAT                               -> error "solution must be found for SAT"
             SAT_SOLUTION      l               -> Satisfiable (map encodeTuple l)
@@ -78,7 +78,7 @@ solve t = case result of
 --   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]]
 --   The function will return the result of the cdcl' function.
 --   Function will immediately return SAT if ClauseList is null or UNSAT if an empty List is found within clist
-cdcl :: [[Integer]] -> Bool -> Bool -> Bool -> CDCLResult
+cdcl :: [[Int]] -> Bool -> Bool -> Bool -> CDCLResult
 cdcl clist valuation stats fullStats
     | checked = UNSAT
     | null clist && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0
@@ -232,7 +232,8 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
     where res = unitPropagation clist tlist (Level lvl) mappedTL
           tupleRes = getTupleClauseListFromTriTuple res
           updatedMap = getMappedTupleListFromTriTuple res
-          interpreted = interpret learnedClist tupleRes
+          litBoolMap = createLitBoolMap tupleRes
+          interpreted = interpret learnedClist litBoolMap
 
           periodUpdate = decreasePeriod period
           halvedActivity = if periodUpdate == Period 0 then halveActivityMap aMap (Map.keys aMap) else aMap
@@ -252,18 +253,17 @@ cdcl' aMap (Level lvl)  tlist mappedTL clistOG learnedClist learnedClauses confC
 -- | calculates the clauselist which will be given to unitpropagation.
 --   returns when everything of tupelClauselist was calculated
 calculateClauseList :: ClauseList -> TupleClauseList -> ClauseList
+calculateClauseList cl [] = cl
 calculateClauseList cl (xs : ys)
     | null ys = reso
     | otherwise = calculateClauseList reso ys
-    where sub = unitSubsumption cl (fst xs) []
-          reso = unitResolution sub (fst xs) []
-calculateClauseList cl [] = cl
+    where reso = unitSubsumeResolve cl (fst xs) [] --unitResolution sub (fst xs) []
 
 -- | Interprets a given ClauseList based on a given TupleClauseList. Will call itself recursively
 --   until a UNRESOLVED, NOK or OK is returned
 --   Bsp: [[2,1,3],[-1]] [(1,0),(3,0),(2,0)] -> 0. CONFLICT
 --   Bsp: [[2,1,3]][(1,0),(2,0)] -> -1. Etwas wurde noch nicht belegt o. etwas wurde nicht positiv.
-interpret :: ClauseList -> TupleClauseList -> InterpretResult
+interpret :: ClauseList -> Map Literal BoolVal -> InterpretResult
 interpret [] _ = OK
 interpret (formel : xs) interpretation
 
@@ -280,12 +280,13 @@ interpret (formel : xs) interpretation
     | otherwise = interpreted --interpret' (snd formel) interpretation False
     where interpreted = interpret' (getOGFromReducedClauseAndOGClause formel) interpretation False
 
+
 -- | Interprets a single clause of a formula
 --   It will return either
 --   OK
 --   NOK (emptyClause) <-- Clause which returns 0 with the set Literals.
 --   UNRESOLVED <-- No Literal evaluated the clause to 1.
-interpret' :: Clause -> TupleClauseList -> Bool -> InterpretResult
+interpret' :: Clause -> Map Literal BoolVal  -> Bool -> InterpretResult
 interpret' clause interpretation boolValue
 
     -- if calculated tupelValue isn't set and xs is null return UNRESOLVED
@@ -309,22 +310,19 @@ interpret' clause interpretation boolValue
               tupelValue = searchTuple varValue interpretation
 
 -- | Get the set value from the tupelClauselist.
-searchTuple :: Literal -> TupleClauseList -> BoolVal
-searchTuple xval (xs : ys)
-    | fst tuple == xval = snd tuple
-    | not (null ys) = searchTuple xval ys
-    | otherwise = BNothing
-    where tuple = fst xs
-
-searchTuple _ [] = BNothing
+searchTuple :: Literal -> Map Literal BoolVal -> BoolVal
+searchTuple xval m = fromMaybe BNothing (Map.lookup xval m)
 
 -- | returns the clauseList from unitPropagation
 getClauseListFromTriTuple :: TriTuple -> ClauseList
 getClauseListFromTriTuple (x, _, _) = x
 
 -- | returns the TupleClauseList from unitPropagation
-getTupleClauseListFromTriTuple ::  TriTuple -> TupleClauseList
+getTupleClauseListFromTriTuple :: TriTuple -> TupleClauseList
 getTupleClauseListFromTriTuple (_, x, _) = x
+
+createLitBoolMap :: TupleClauseList -> Map Literal BoolVal
+createLitBoolMap x = Map.fromList $ map fst x
 
 -- | returns the MappedTupleList from unitPropagation
 getMappedTupleListFromTriTuple :: TriTuple -> MappedTupleList
