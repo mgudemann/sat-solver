@@ -29,8 +29,7 @@ import           CDCL.Types (Activity (..), ActivityMap, BoolVal (..),
                      getOGFromReducedClauseAndOGClause, increaseLvl,
                      negateLiteralValue, transformClauseList)
 
-import           CDCL.Unitpropagation (unitPropagation, unitResolution,
-                     unitSubsumeResolve, unitSubsumption)
+import           CDCL.Unitpropagation (unitPropagation, unitSubsumeResolve)
 
 import           CDCL.MapLogic (pushToMappedTupleList)
 
@@ -53,17 +52,17 @@ startBoundary = 20
 
 decodeTuple :: Int -> Tuple
 decodeTuple value = if value >= 0
-    then (Lit (toInteger value), BTrue)
-    else (Lit (toInteger (-value)), BFalse)
+    then (Lit value, BTrue)
+    else (Lit (-value), BFalse)
 
 
 encodeTuple :: Tuple -> Int
-encodeTuple (Lit l, BTrue) = fromInteger l
-encodeTuple (Lit l, BFalse) = fromInteger (-l)
+encodeTuple (Lit l, BTrue) = l
+encodeTuple (Lit l, BFalse) = -l
 
 -- | This function calls the solver without reporting any statistics. Returns
 -- list of literanls encoded as Integer.
-solve :: [[Integer]] -> SATResult
+solve :: [[Int]] -> SATResult
 solve t = case result of
             SAT                               -> error "solution must be found for SAT"
             SAT_SOLUTION      l               -> Satisfiable (map encodeTuple l)
@@ -79,7 +78,7 @@ solve t = case result of
 --   cdcl [[1,2,3,4], [2,4], [4,5],[3,6,7],[3,9,1],[3,8,10]]
 --   The function will return the result of the cdcl' function.
 --   Function will immediately return SAT if ClauseList is null or UNSAT if an empty List is found within clist
-cdcl :: [[Integer]] -> Bool -> Bool -> Bool -> CDCLResult
+cdcl :: [[Int]] -> Bool -> Bool -> Bool -> CDCLResult
 cdcl clist valuation stats fullStats
     | checked = UNSAT
     | null clist && fullStats = SAT_WITH_FULL_STATS [] Map.empty [] 0 0 0 0

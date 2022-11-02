@@ -9,8 +9,8 @@
 -- Portability :
 --
 ---------------------------------------------------------------------
-module CDCL.Unitpropagation (getUnitClause, unitSubsumption,
-    unitResolution, unitPropagation, unitSubsumeResolve) where
+module CDCL.Unitpropagation (getUnitClause,
+    unitPropagation, unitSubsumeResolve) where
 
 import           CDCL.Types (BoolVal (..), Clause, ClauseList, Level,
                      Literal (..), MappedTupleList, Reason (..),
@@ -54,31 +54,9 @@ setLiteral clause =
       then (negateLiteralValue e, BFalse) else (e, BTrue) -- Need change here
 
 -- | Remove clauses which have removableVar as Literal.
-unitSubsumption :: ClauseList  -> Tuple -> ClauseList -> ClauseList
-unitSubsumption (firstList@(rClause, _) : xs) tuple@(Lit x, bVal) acc
-
-    -- Case: Literal is not found in current clause. Readd it to the ClauseList
-    | not checked = unitSubsumption xs tuple (firstList : acc)
-
-    -- Case: Literal was found. Remove the clause.
-    | otherwise = unitSubsumption xs tuple acc
-    where val = if bVal == BTrue then Lit x else Lit (-x)
-          checked = val `Set.member` rClause -- checks if val is inside list
-
-unitSubsumption _ _ acc = acc
-
--- | remove negated Literal of the Literal which was set
+--   remove negated Literal of the Literal which was set
 --   For example a negated Literal was resolved, which would remove
 --   the positive ones.
-unitResolution :: ClauseList -> Tuple -> ClauseList -> ClauseList
-unitResolution ((rClause, ogClause) : xs) tuple@(Lit x, bVal) acc =
-  unitResolution xs tuple ((list, ogClause) : acc)
-    where val = if bVal == BFalse then Lit x else Lit (-x)
-          list = Set.delete val rClause
-
-unitResolution _ _ acc = acc
-
-
 unitSubsumeResolve :: ClauseList -> Tuple -> ClauseList -> ClauseList
 unitSubsumeResolve [] _ acc = acc
 unitSubsumeResolve ((rClause, ogClause) : xs) tuple@(Lit x, bVal) acc =

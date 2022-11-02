@@ -23,7 +23,7 @@ checkComment c = c == 'c'
 checkCNFStart :: Char -> Bool
 checkCNFStart c = c == 'p'
 
-loopCheck :: Handle -> [[Integer]] -> IO (Maybe [[Integer]])
+loopCheck :: Handle -> [[Int]] -> IO (Maybe [[Int]])
 loopCheck handle clist = do
     end <- hIsEOF handle
     if end then
@@ -38,7 +38,7 @@ loopCheck handle clist = do
             _ <- hGetLine handle
             loopCheck handle clist
 
-loopCheck' :: Handle -> [[Integer]] -> IO (Maybe [[Integer]])
+loopCheck' :: Handle -> [[Int]] -> IO (Maybe [[Int]])
 loopCheck' handle clist = do
     end <- hIsEOF handle
     if end then
@@ -57,10 +57,10 @@ loopCheck' handle clist = do
             let list = createIntegerList word []
             loopCheck' handle (list : clist)
 
-createIntegerList :: [String] -> [Integer] -> [Integer]
+createIntegerList :: [String] -> [Int] -> [Int]
 createIntegerList (xString : ysString) intList
     | m == 0 = intList
     | otherwise = createIntegerList ysString (m : intList)
-    where m = read xString :: Integer
+    where m = read xString :: Int
 
 createIntegerList [] ys = ys
